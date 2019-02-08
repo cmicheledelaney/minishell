@@ -53,7 +53,7 @@ int		check_in_between(char *input, int index, char unescaped)
 	return (0);
 }
 
-void	check_unescaped(void)
+void	check_unescaped(char *input)
 {
 	int		quotes;
 	int		double_quotes;
@@ -62,8 +62,8 @@ void	check_unescaped(void)
 	int		index;
 
 	line = NULL;
-	quotes = unescaped_char(g_input, '\'');
-	double_quotes = unescaped_char(g_input, '\"');
+	quotes = unescaped_char(input, '\'');
+	double_quotes = unescaped_char(input, '\"');
 	index = 0;
 	if (quotes != double_quotes)
 	{
@@ -71,16 +71,16 @@ void	check_unescaped(void)
 			unescaped_c = (quotes < double_quotes) ? ('\"') : ('\'');
 		else
 			unescaped_c = (quotes > double_quotes) ? ('\"') : ('\'');
-		index = unescaped_char(g_input, unescaped_c);
+		index = unescaped_char(input, unescaped_c);
 		while (line == NULL || unescaped_char(line, unescaped_c) == -1)
 		{
-			if (check_in_between(g_input, index, unescaped_c))
+			if (check_in_between(input, index, unescaped_c))
 				break;
-			line != NULL ? g_input = strjoin_more(3, g_input, "\n", line) : 0;
+			line != NULL ? input = strjoin_more(3, input, "\n", line) : 0;
 			ft_printf("> ");
 			get_next_line(0, &line);
 		}
-		(line != NULL) ? (g_input = strjoin_more(3, g_input, "\n", line)) : (0);
+		(line != NULL) ? (input = strjoin_more(3, input, "\n", line)) : (0);
 		(line != NULL) ? (free(line)) : (0);
 	}
 }
@@ -108,58 +108,53 @@ int		nbr_strchr(char *string, char c)
 	return (nbr_occurances);
 }
 
-char	***split_seperate_cmds(void)
+void	split_seperate_cmds(t_input *input)
 {
-	char	***args;
 	int		i;
 	int		j;
 	int		nbr_cmds;
-	char	*cmd;
 	int		length;
 
 	i = -1;
 	j = -1;
-	nbr_cmds = nbr_strchr(g_input, ';') + 1;
-	args = (char ***)malloc(sizeof(char **) * (nbr_cmds + 1));
-	while (g_input[++i])
+	nbr_cmds = nbr_strchr(input->input_string, ';') + 1;
+	input->cmds = (char ***)malloc(sizeof(char **) * (nbr_cmds + 1));
+	while (input->input_string[++i])
 	{
-		while (g_input[i] == ' ')
+		j++;
+		while (input->input_string[i] == ' ')
 			i++;
-		if ((length = ft_strstr_index(&g_input[i], ";")) == -1)
-			length = (int)ft_strlen(&g_input[i]);
-		cmd = ft_strsub(g_input, i, length);
-		args[++j] = ft_strsplit_whitespace(cmd);
-		while (g_input[i] && g_input[i] != ';')
+		if ((length = ft_strstr_index(&input->input_string[i], ";")) == -1)
+			length = (int)ft_strlen(&input->input_string[i]);
+		input->cmds_strings[j] = ft_strsub(input->input_string, i, length);
+		input->cmds[j] = ft_strsplit_whitespace(input->cmds_strings[j]);
+		while (input->input_string[i] && input->input_string[i] != ';')
 			i++;
-		free(cmd);
 	}
-	args[++j] = NULL;
-	return (args);
+	input->cmds[++j] = NULL;
 }
 
-char	***get_args(void)
+void	get_args(t_input *input)
 {
 	int		i;
 	int		j;
-	char	***args;
 	char	*key;
 
 	i = -1;
-	check_unescaped();
-	args = split_seperate_cmds();
-	while (args && args[++i])
+	check_unescaped(input->input_string);
+	split_seperate_cmds(input);
+	while (input->cmds && input->cmds[++i])
 	{
 		j = -1;
-		while (args && args[i][++j])
+		while (input->cmds && input->cmds[i][++j])
 		{
-			while (ft_strchr(args[i][j], '~'))
+			while (ft_strchr(input->cmds[i][j], '~'))
 			{
 				if ((key = get_key(g_environ, "HOME")) != NULL)
-					replace(&args[i][j], "~", key);
+					replace(&input->cmds[i][j], "~", key);
 			}
-			while (ft_strchr(args[i][j], '$'))
-				dollar_extension(&args[i][j]);
+			while (ft_strchr(input->cmds[i][j], '$'))
+				dollar_extension(&input->cmds[i][j]);
 		}
 	}
-	return (args);
 }

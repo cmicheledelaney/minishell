@@ -67,16 +67,21 @@ char	*get_key(char **dict, char *variable)
 void	change_key(char *variable, char *key)
 {
 	int		unset_var;
-	char	*array[3];
+	int		i;
+	char	**new_env;
 
-	array[0] = "";
-	array[1] = variable;
-	array[2] = key;
+	i = -1;
+	if (variable == NULL || key== NULL)
+		return ;
 	if ((unset_var = search_str_in_array(g_environ, variable)) == -1)
 	{
-		ft_setenv(array);
-		return ;
+		while (g_environ[++i])
+			;
+		unset_var = i;
 	}
-	free(g_environ[unset_var]);
+	new_env = copy_array(g_environ);
+	free_array(g_environ);
+	g_environ = new_env;
+	(g_environ[unset_var] != NULL) ? (free(g_environ[unset_var])) : (0);
 	g_environ[unset_var] = strjoin_more(3, variable, "=", key);
 }

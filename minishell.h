@@ -40,26 +40,25 @@
 
 typedef struct	s_input
 {
-	char		*input;
+	char		*input_string;
 	char		**cmds_strings;
-	char		***cmds_tokens;
+	char		***cmds;
 }				t_input;
 
 char	**g_environ;
-char	*g_input;
 pid_t	g_pid_parent;
 pid_t	g_pid_child;
 
-int		ft_cd(char **args);
-int		ft_exit(char **args);
-int		ft_setenv(char **args);
-int		ft_env(char **args);
-int		ft_echo(char **args);
-int		ft_unsetenv(char **args);
+int		ft_cd(t_input *input, int j);
+int		ft_exit(t_input *input, int j);
+int		ft_setenv(t_input *input, int j);
+int		ft_env(t_input *input, int j);
+int		ft_echo(t_input *input, int j);
+int		ft_unsetenv(t_input *input, int j);
 void	change_key(char *variable, char *key);
 char	*get_key(char **dict, char *variable);
 void	dollar_extension(char **args);
-char	***get_args(void);
-void	check_unescaped(void);
+void	get_args(t_input *input);
+void	check_unescaped(char *input);
 
 #endif

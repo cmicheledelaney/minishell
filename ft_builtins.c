@@ -20,7 +20,7 @@
 ** updated.
 */
 
-int	ft_cd(char **args)
+int	ft_cd(t_input *input, int j)
 {
 	int		index;
 	char	*pwd;
@@ -28,13 +28,13 @@ int	ft_cd(char **args)
 	long	size;
 
 	index = search_str_in_array(g_environ, "HOME");
-	if ((args[1] == NULL || args[1][0] == '\0') && index != -1)
+	if ((input->cmds[j][1] == NULL || input->cmds[j][1][0] == '\0') && index != -1)
 		chdir(g_environ[index] + 5);
-	else if (args[1] != NULL && !ft_strcmp(args[1], "-"))
+	else if (input->cmds[j][1] != NULL && !ft_strcmp(input->cmds[j][1], "-"))
 		chdir(get_key(g_environ, "OLDPWD"));
-	else if ((index == -1 && args[1] == NULL) || chdir(args[1]) != 0)
+	else if ((index == -1 && input->cmds[j][1] == NULL) || chdir(input->cmds[j][1]) != 0)
 	{
-		(index == -1) ? (ft_printf("%s", "HOME")) : (ft_printf("%s", args[1]));
+		(index == -1) ? (ft_printf("%s", "HOME")) : (ft_printf("%s", input->cmds[j][1]));
 		ft_printf(": not a directory\n");
 	}
 	if ((oldpwd = get_key(g_environ, "PWD")) != NULL)
@@ -52,9 +52,9 @@ int	ft_cd(char **args)
 ** exits the minishell.
 */
 
-int	ft_exit(char **args)
+int	ft_exit(t_input *input, int j)
 {
-	args += 0;
+	input->cmds[j] += 0;
 	free_array(g_environ);
 	return (-1);
 }
@@ -65,7 +65,7 @@ int	ft_exit(char **args)
 ** word is seperated by exactly one space.
 */
 
-int	ft_echo(char **args)
+int	ft_echo(t_input *input, int j)
 {
 	char	*str;
 	int		last_char;
@@ -73,20 +73,20 @@ int	ft_echo(char **args)
 
 	i = 0;
 	last_char = -1;
-	while (g_input[++last_char])
+	while (input->cmds_strings[j][++last_char])
 		;
-	if ((args)[1] != NULL)
+	if ((input->cmds)[j][1] != NULL)
 	{
-		if (g_input[5] == '"' && g_input[last_char - 1] == '"')
+		if (input->cmds_strings[j][5] == '"' && input->cmds_strings[j][last_char - 1] == '"')
 		{
-			str = ft_strsub(g_input, 6, ft_strlen(g_input) - 7);
+			str = ft_strsub(input->cmds_strings[j], 6, ft_strlen(input->cmds_strings[j]) - 7);
 			ft_printf("%s", str);
 			free(str);
 		}
 		else
 		{
-			while (args[++i])
-				ft_printf("%s ", args[i]);
+			while (input->cmds[j][++i])
+				ft_printf("%s ", input->cmds[j][i]);
 		}
 		ft_printf("\n");
 	}

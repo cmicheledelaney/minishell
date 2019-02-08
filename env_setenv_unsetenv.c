@@ -20,12 +20,12 @@
 ** env SYNTAX: env
 */
 
-int		ft_env(char **args)
+int		ft_env(t_input *input, int j)
 {
 	int i;
 
-	args += 0;
 	i = -1;
+	input->cmds_strings[j] += 0;
 	while (g_environ[++i] != NULL)
 		ft_printf("%s\n", g_environ[i]);
 	return (0);
@@ -39,28 +39,17 @@ int		ft_env(char **args)
 ** g_environ a new one will get added to the array.
 */
 
-int		ft_setenv(char **args)
+int		ft_setenv(t_input *input, int j)
 {
-	int		i;
-	char	**new_env;
-
-	i = -1;
-	if (args[1] == NULL || args[2] == NULL)
-		return (0);
-	if (get_key(g_environ, args[1]) != NULL)
+	if (input->cmds[j][1] == NULL || input->cmds[j][2] == NULL)
+		return (-1);
+	if (get_key(g_environ, input->cmds[j][1]) != NULL)
 	{
-		change_key(args[1], args[2]);
-		return (0);
+		ft_printf("variable already exists\n");
+		return (-1);
 	}
-	while (g_environ[++i])
-		;
-	new_env = NULL;
-	new_env = copy_array(g_environ);
-	free_array(g_environ);
-	g_environ = new_env;
-	free(g_environ[i]);
-	g_environ[i] = strjoin_more(3, args[1], "=", args[2]);
-	return (0);
+	change_key(input->cmds[j][1], input->cmds[j][2]);
+	return (1);
 }
 
 /*
@@ -85,19 +74,19 @@ void	move_elements_in_array(char **array, int index)
 ** SYNTAX: unsetenv [variable_name]
 */
 
-int		ft_unsetenv(char **args)
+int		ft_unsetenv(t_input *input, int j)
 {
 	int		unset_var;
 	char	*variable;
 
-	if (args[1] == NULL)
+	if (input->cmds[j][1] == NULL)
 		return (0);
-	variable = ft_strjoin(args[1], "=");
+	variable = ft_strjoin(input->cmds[j][1], "=");
 	unset_var = search_str_in_array(g_environ, variable);
 	if (unset_var != -1)
 		move_elements_in_array(g_environ, unset_var);
 	else
-		ft_printf("%s: no such environment variable\n", args[1]);
+		ft_printf("%s: no such environment variable\n", input->cmds[j][1]);
 	free(variable);
 	return (0);
 }

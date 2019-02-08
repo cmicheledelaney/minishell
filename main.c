@@ -32,7 +32,7 @@ char	*g_builtin[] =
 ** array of the builtins implemented in this program.
 */
 
-int		(*g_builtin_functions[])(char **) =
+int		(*g_builtin_functions[])(t_input *, int) =
 {
 	&ft_cd,
 	&ft_exit,
@@ -49,7 +49,7 @@ int		(*g_builtin_functions[])(char **) =
 ** to the execve function.
 */
 
-char	*check_access(char **args, char **array)
+char	*check_access(char **cmd, char **array)
 {
 	int		i;
 	char	*access_str;
@@ -59,12 +59,12 @@ char	*check_access(char **args, char **array)
 	while (array[++i])
 	{
 		if (i == 0)
-			access_str = ft_strdup(args[0]);
+			access_str = ft_strdup(cmd[0]);
 		else
 		{
 			access_str = ft_strjoin(array[i], "/");
 			hold = access_str;
-			access_str = ft_strjoin(access_str, args[0]);
+			access_str = ft_strjoin(access_str, cmd[0]);
 			free(hold);
 		}
 		if (access(access_str, X_OK) == 0)
@@ -83,24 +83,24 @@ char	*check_access(char **args, char **array)
 ** The execve function executes the command as a child process.
 */
 
-int		run_commands(char **args)
+int		run_commands(char **cmd)
 {
 	int		path_key;
 	char	*valid_access;
 	char	**paths;
 
 	path_key = search_str_in_array(g_environ, "PATH");
-	if (path_key == -1 && access(args[0], X_OK))
+	if (path_key == -1 && access(cmd[0], X_OK))
 	{
 		ft_printf("PATH not found\n");
 		return (-1);
 	}
 	paths = (path_key != -1) ? (ft_strsplit(g_environ[path_key] + 5, ':')) : (NULL);
-	valid_access = (path_key != -1) ? (check_access(args, paths)) : (ft_strdup(args[0]));
+	valid_access = (path_key != -1) ? (check_access(cmd, paths)) : (ft_strdup(cmd[0]));
 	if (valid_access == NULL)
-		ft_printf("command not found: %s\n", args[0]);
+		ft_printf("command not found: %s\n", cmd[0]);
 	if (valid_access != NULL && (g_pid_child = fork()) == 0)
-		execve(valid_access, args, g_environ);
+		execve(valid_access, cmd, g_environ);
 	else
 		wait(NULL);
 	(valid_access != NULL) ? (free(valid_access)) : (0);
@@ -124,43 +124,44 @@ int		print_prompt(void)
 	return (1);
 }
 
-void	exec_cmd(char ***args, int j)
+void	exec_cmd(t_input *input, int j)
 {
 	int	done;
 	int	i;
 
 	done = 0;
 	i = -1;
-	while (args != NULL && args[j][0] && g_builtin[++i])
+	while (input->cmds != NULL && input->cmds[j][0] && g_builtin[++i])
 	{
-		if (ft_strcmp(args[j][0], g_builtin[i]) == 0)
+		if (ft_strcmp(input->cmds[j][0], g_builtin[i]) == 0)
 		{
 			done = 1;
-			if (g_builtin_functions[i](args[j]) == -1)
+			if (g_builtin_functions[i](input, j) == -1)
 				exit(0);
 		}
 	}
-	(done == 0 && args[j][0] != NULL) ? (run_commands(args[j])) : (0);
+	(done == 0 && input->cmds[j][0] != NULL) ? (run_commands(input->cmds[j])) : (0);
 }
 
 
 
 int		minishell(void)
 {
-	char	***args;
+	t_input	input;
 	int		j;
 
-	while (print_prompt() && get_next_line(0, &g_input) > 0)
+	while (print_prompt() && get_next_line(0, &input.input_string) > 0)
 	{
-		args = get_args();
+		get_args(&input);
 		j = -1;
-		while (args[++j])
+		while (input.cmds[++j])
 		{
-			exec_cmd(args, j);
-			free_array(args[j]);
+			exec_cmd(&input, j);
+			free_array(input.cmds[j]);
+			free(input.cmds_strings);
 		}
-		(g_input != NULL) ? (free(g_input)) : (0);
-		free(args);
+		(input.input_string != NULL) ? (free(input.input_string)) : (0);
+		input.input_string = NULL;
 		return (1);
 	}
 	return (0);
@@ -198,10 +199,7 @@ int		main(int argc, char **argv, char **environ)
 	signal(SIGINT, signal_handler);
 	g_environ = copy_array(environ);
 	while (minishell())
-	{
-		g_input = NULL;
 		g_pid_child = 0;
-	}
 	ft_printf("\n");
 	return (0);
 }
