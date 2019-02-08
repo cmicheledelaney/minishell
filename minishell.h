@@ -38,6 +38,13 @@
 # define RESET "\033[0m\033[0m"
 # define IS_EXPANSION(x) (x == '~' || x == '$')
 
+typedef struct	s_input
+{
+	char		*input;
+	char		**cmds_strings;
+	char		***cmds_tokens;
+}				t_input;
+
 char	**g_environ;
 char	*g_input;
 pid_t	g_pid_parent;
@@ -52,5 +59,7 @@ int		ft_unsetenv(char **args);
 void	change_key(char *variable, char *key);
 char	*get_key(char **dict, char *variable);
 void	dollar_extension(char **args);
+char	***get_args(void);
+void	check_unescaped(void);
 
 #endif

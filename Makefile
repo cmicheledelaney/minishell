@@ -15,7 +15,8 @@ NAME = minishell
 SRC =	./main.c \
 		./keys_environ.c \
 		./ft_builtins.c \
-		./env_setenv_unsetenv.c
+		./env_setenv_unsetenv.c \
+		./parse_input.c
 
 OBJ = $(SRC:.c=.o)
 

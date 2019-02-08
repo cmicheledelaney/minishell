@@ -109,72 +109,67 @@ int		run_commands(char **args)
 }
 
 /*
-** the line in the command line (g_input) gets split into an array of single
-** words. The '~' and the variables declared with a '$' get replaced by the
-** corresponding values.
-** !!! if one word in the command line contains multiple variables with a '$'
-** or a '~', only the first one gets replaced. !!!
-*/
-
-char	**get_args(void)
-{
-	int		i;
-	char	**args;
-	char	*key;
-
-	i = -1;
-	args = ft_strsplit_whitespace(g_input);
-	while (args[++i])
-	{
-		while (ft_strchr(args[i], '~'))
-		{
-			if ((key = get_key(g_environ, "HOME")) != NULL)
-				replace(&args[i], "~", key);
-		}
-		while (ft_strchr(args[i], '$'))
-			dollar_extension(&args[i]);
-	}
-	return (args);
-}
-
-/*
 ** reads the input given on the command line line by line and processes it.
 ** First the function pointer array will be searched for the command, if it's
 ** not found there, the command gets executed by run_commands.
 */
 
-int		minishell(void)
+int		print_prompt(void)
 {
-	char	**args;
-	int		i;
-	int		done;
+	char *username;
+
+	ft_printf(MAG "minishell " CYA2 "(%s) " WHI,
+		(((username = get_key(g_environ, "USER")) == NULL) ?
+		("-") : (username)));
+	return (1);
+}
+
+void	exec_cmd(char ***args, int j)
+{
+	int	done;
+	int	i;
 
 	done = 0;
-	g_input = NULL;
-	while (get_next_line(0, &g_input) > 0)
+	i = -1;
+	while (args != NULL && args[j][0] && g_builtin[++i])
+	{
+		if (ft_strcmp(args[j][0], g_builtin[i]) == 0)
+		{
+			done = 1;
+			if (g_builtin_functions[i](args[j]) == -1)
+				exit(0);
+		}
+	}
+	(done == 0 && args[j][0] != NULL) ? (run_commands(args[j])) : (0);
+}
+
+
+
+int		minishell(void)
+{
+	char	***args;
+	int		j;
+
+	while (print_prompt() && get_next_line(0, &g_input) > 0)
 	{
 		args = get_args();
-		i = -1;
-		while (args != NULL && args[0] && g_builtin[++i])
+		j = -1;
+		while (args[++j])
 		{
-			if (ft_strcmp(args[0], g_builtin[i]) == 0)
-			{
-				done = 1;
-				if (g_builtin_functions[i](args) == -1)
-					exit(0);
-			}
+			exec_cmd(args, j);
+			free_array(args[j]);
 		}
-		(done == 0 && args[0] != NULL) ? (run_commands(args)) : (0);
 		(g_input != NULL) ? (free(g_input)) : (0);
-		free_array(args);
+		free(args);
 		return (1);
 	}
-	return (1);
+	return (0);
 }
 
 /*
 ** catches the signal SIGINT (ctrl + c) and exits the child process. If SIGINT
-** is sent by the parent process the prompt shows up again.
+** is sent by the parent process it just returns to where the process got
+** interrupted.
 */
 
 void	signal_handler(int signum)
@@ -183,7 +178,6 @@ void	signal_handler(int signum)
 	{
 		ft_printf("\n");
 		kill(g_pid_child, signum);
-		return ;
 	}
 }
 
@@ -199,15 +193,15 @@ void	signal_handler(int signum)
 
 int		main(int argc, char **argv, char **environ)
 {
-	char	*username;
-
 	g_pid_parent = getpid();
 	argv[argc] = NULL;
 	signal(SIGINT, signal_handler);
 	g_environ = copy_array(environ);
-	while (ft_printf(MAG "minishell " CYA2 "(%s) " WHI,
-		(((username = get_key(g_environ, "USER")) == NULL) ?
-		("-") : (username))) && minishell())
+	while (minishell())
+	{
+		g_input = NULL;
 		g_pid_child = 0;
+	}
+	ft_printf("\n");
 	return (0);
 }

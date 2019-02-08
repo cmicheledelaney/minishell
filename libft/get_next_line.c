@@ -12,7 +12,7 @@
 
 #include "libft.h"
 
-int	copy_line(char **line, char **str, int eol, int ret)
+int	copy_line(char **line, char **str, int eol)
 {
 	int		j;
 	char	*hold;
@@ -25,11 +25,10 @@ int	copy_line(char **line, char **str, int eol, int ret)
 	*str += (**str == '\n') ? (1) : (0);
 	*str = ft_strdup(*str);
 	free(hold);
-	ret += 0;
 	return (1);
 }
 
-int	get_next_line(const int fd, char **line)
+int		get_next_line(const int fd, char **line)
 {
 	char			buff[BUFF_SIZE + 1];
 	static char		*str[FD_LIMIT];
@@ -46,7 +45,7 @@ int	get_next_line(const int fd, char **line)
 		while (str[fd][eol] != '\n' && str[fd][eol] != '\0')
 			eol++;
 		if (str[fd][eol] == '\n' || (str[fd][0] != '\0' && ret != BUFF_SIZE))
-			return (copy_line(line, &str[fd], eol, ret));
+			return (copy_line(line, &str[fd], eol));
 		if (ret == 0)
 			return (0);
 	}
