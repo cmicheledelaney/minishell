@@ -119,6 +119,7 @@ void	split_seperate_cmds(t_input *input)
 	j = -1;
 	nbr_cmds = nbr_strchr(input->input_string, ';') + 1;
 	input->cmds = (char ***)malloc(sizeof(char **) * (nbr_cmds + 1));
+	input->cmds_strings = (char **)malloc(sizeof(char *) * (nbr_cmds + 1));
 	while (input->input_string[++i])
 	{
 		j++;

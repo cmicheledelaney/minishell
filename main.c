@@ -158,7 +158,7 @@ int		minishell(void)
 		{
 			exec_cmd(&input, j);
 			free_array(input.cmds[j]);
-			free(input.cmds_strings);
+			free(input.cmds_strings[j]);
 		}
 		(input.input_string != NULL) ? (free(input.input_string)) : (0);
 		input.input_string = NULL;
