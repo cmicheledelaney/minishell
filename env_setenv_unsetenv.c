@@ -42,11 +42,11 @@ int		ft_env(t_input *input, int j)
 int		ft_setenv(t_input *input, int j)
 {
 	if (input->cmds[j][1] == NULL || input->cmds[j][2] == NULL)
-		return (-1);
+		return (0);
 	if (get_key(g_environ, input->cmds[j][1]) != NULL)
 	{
 		ft_printf("variable already exists\n");
-		return (-1);
+		return (0);
 	}
 	change_key(input->cmds[j][1], input->cmds[j][2]);
 	return (1);
