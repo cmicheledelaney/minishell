@@ -140,7 +140,6 @@ int		exec_cmd(t_input *input, int j)
 				exit(0);
 		}
 	}
-	//(done == 0 && input->cmds[j][0] != NULL) ? (run_commands(input->cmds[j])) : (0);
 	if (done == 0 && input->cmds[j][0] != NULL)
 		return (1);
 	return (0);
@@ -162,7 +161,7 @@ int		minishell(void)
 			//	continue;
 			if (exec_cmd(&input, j))
 				run_commands(input.cmds[j]);
-			free_array(input.cmds[j]);
+			//free_array(input.cmds[j]); something is wrong here
 			free(input.cmds_strings[j]);
 		}
 		(input.input_string != NULL) ? (free(input.input_string)) : (0);

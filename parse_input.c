@@ -107,11 +107,13 @@ int		check_in_between(char *input, int index, char embrace)
 	int		i;
 	int		start;
 	int		end;
+	int		max;
 
+	max = ft_strlen(input);
 	start = -1;
 	end = -1;
 	i = -1;
-	while (input[++i])
+	while (++i < max)
 	{
 		if (input[i] == embrace)
 		{
@@ -211,6 +213,33 @@ int		find_index_of_next_unembraced_seperator(char *string, char seperator)
 	return (-1);
 }
 
+void	remove_quotes(t_input *input, char sign)
+{
+	int	i;
+	int	j;
+	int	k;
+
+	i = -1;
+	while (input->cmds[++i])
+	{
+		j = -1;
+		while (input->cmds[i][++j])
+		{
+			k = -1;
+			while (input->cmds[i][j][++k])
+			{
+				if (input->cmds[i][j][k] == sign)
+				{
+					int m = k -1;
+					while (input->cmds[i][j][++m] && input->cmds[i][j][m + 1])
+						input->cmds[i][j][m] = input->cmds[i][j][m + 1];
+					input->cmds[i][j][m] = '\0';
+				}
+			}
+		}
+	}
+}
+
 void	split_cmds(char **args, char *string, char split)
 {
 	int		i;
@@ -221,7 +250,7 @@ void	split_cmds(char **args, char *string, char split)
 	i = -1;
 	j = -1;
 	max = (string != NULL) ? (ft_strlen(string)) : (0);
-	while (string[++i] && i < max)
+	while (++i < max)
 	{
 		while (string[i] == ' ')
 			i++;
@@ -241,16 +270,18 @@ void	get_args(t_input *input)
 	int	nbr_cmds;
 
 	i = -1;
-	nbr_cmds = nbr_strchr_unembraced(input->input_string, ';') + 1;
-	input->cmds_strings = (char **)malloc(sizeof(char *) * (nbr_cmds + 2));
-	input->cmds = (char ***)malloc(sizeof(char **) * (nbr_cmds + 2));
+	nbr_cmds = nbr_strchr_unembraced(input->input_string, ';') + 2;
+	input->cmds_strings = (char **)malloc(sizeof(char *) * nbr_cmds);
+	input->cmds = (char ***)malloc(sizeof(char **) * (nbr_cmds + 100)); //look at this again, something's wrong
 	check_unescaped(input->input_string);
 	first_step(input);
 	split_cmds(input->cmds_strings, input->input_string, ';');
 	while (input->cmds_strings[++i])
 	{
-		nbr_cmds = nbr_strchr_unembraced(input->cmds_strings[i], ' ') + 1;
-		input->cmds[i] = (char **)malloc(sizeof(char *) * (nbr_cmds + 2));
+		nbr_cmds = nbr_strchr_unembraced(input->cmds_strings[i], ' ') + 2;
+		input->cmds[i] = (char **)malloc(sizeof(char *) * nbr_cmds);
 		split_cmds(input->cmds[i], input->cmds_strings[i], ' ');
 	}
+	remove_quotes(input, '\'');
+	remove_quotes(input, '\"');
 }

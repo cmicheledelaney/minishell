@@ -41,10 +41,10 @@ int	ft_cd(t_input *input, int j)
 		change_key("OLDPWD", oldpwd);
 	size = 1000;
 	pwd = NULL;
-	if ((pwd = (char *)malloc(sizeof(long) * size)) != NULL)
+	if ((pwd = (char *)malloc(sizeof(char) * size)) != NULL)
 		pwd = getcwd(pwd, (size_t)size);
 	change_key("PWD", pwd);
-	(pwd != NULL) ? (free(pwd)) : (0);
+	free(pwd);
 	return (1);
 }
 
