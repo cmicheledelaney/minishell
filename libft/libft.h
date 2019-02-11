@@ -100,5 +100,6 @@ void				print_binary_variable(uint64_t variable, int size);
 void				print_binary_string(char *message, int len);
 char				*hold_and_free(char *old, char *addition);
 char				**ft_strsplit_whitespace(char const *s);
+int					ft_strchr_index(const char *s, int c);
 
 #endif

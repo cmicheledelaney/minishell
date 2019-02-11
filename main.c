@@ -124,7 +124,7 @@ int		print_prompt(void)
 	return (1);
 }
 
-void	exec_cmd(t_input *input, int j)
+int		exec_cmd(t_input *input, int j)
 {
 	int	done;
 	int	i;
@@ -140,9 +140,11 @@ void	exec_cmd(t_input *input, int j)
 				exit(0);
 		}
 	}
-	(done == 0 && input->cmds[j][0] != NULL) ? (run_commands(input->cmds[j])) : (0);
+	//(done == 0 && input->cmds[j][0] != NULL) ? (run_commands(input->cmds[j])) : (0);
+	if (done == 0 && input->cmds[j][0] != NULL)
+		return (1);
+	return (0);
 }
-
 
 
 int		minishell(void)
@@ -156,7 +158,10 @@ int		minishell(void)
 		j = -1;
 		while (input.cmds[++j])
 		{
-			exec_cmd(&input, j);
+			//if (check_for_pipe(&input, j) == 1)
+			//	continue;
+			if (exec_cmd(&input, j))
+				run_commands(input.cmds[j]);
 			free_array(input.cmds[j]);
 			free(input.cmds_strings[j]);
 		}
@@ -202,4 +207,4 @@ int		main(int argc, char **argv, char **environ)
 		g_pid_child = 0;
 	ft_printf("\n");
 	return (0);
-}
+	}

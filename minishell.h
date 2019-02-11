@@ -60,5 +60,11 @@ char	*get_key(char **dict, char *variable);
 void	dollar_extension(char **args);
 void	get_args(t_input *input);
 void	check_unescaped(char *input);
+void	move_elements_in_array(char **array, int index);
+//void	exec_cmd(t_input *input, int j);
+int		exec_cmd(t_input *input, int j);
+int		check_for_pipe(t_input *input, int j);
+void	exec_pipe(t_input *input, int j, char **cmd1, char **cmd2);
+int		check_in_between(char *input, int index, char embrace);
 
 #endif

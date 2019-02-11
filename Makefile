@@ -16,7 +16,8 @@ SRC =	./main.c \
 		./keys_environ.c \
 		./ft_builtins.c \
 		./env_setenv_unsetenv.c \
-		./parse_input.c
+		./parse_input.c \
+		./pipe.c
 
 OBJ = $(SRC:.c=.o)
 

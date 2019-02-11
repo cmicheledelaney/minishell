@@ -45,6 +45,7 @@ SRCS =	./ft_memset.c \
 		./ft_strrchr.c \
 		./ft_strstr.c \
 		./ft_strstr_index.c \
+		./ft_strchr_index.c \
 		./ft_strnstr.c \
 		./ft_strncmp.c \
 		./ft_atoi.c \

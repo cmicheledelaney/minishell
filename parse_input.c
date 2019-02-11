@@ -1,5 +1,85 @@
 #include "minishell.h"
 
+/*
+** the parsing hierarchy is as follows:
+** quotes/doublequotes, pipes, redirection, semi-colon, spaces.
+** something that is surrounded by quotes or double quotes, won't get parsed
+** any further.
+*/
+
+
+/*
+** checks if there are things to replace (if there is a $ or ~ not in between
+** single quotes) and replaces them accordingly.
+** DOESN'T WORK IN CASES LIKE THIS: $HOME$HOME
+*/
+
+void	first_step(t_input *input)
+{
+	int		i;
+	char	*key;
+	int		index;
+
+	i = -1;
+	check_unescaped(input->input_string);
+	while (input->input_string && input->input_string[++i])
+	{
+		while ((index = ft_strchr_index(input->input_string, '~')) != -1
+			&& check_in_between(input->input_string, index, '\'') == 0)
+		{
+			if ((key = get_key(g_environ, "HOME")) != NULL)
+				replace(&input->input_string, "~", key);
+		}
+		while ((index = ft_strchr_index(input->input_string, '$')) != -1
+			&& check_in_between(input->input_string, index, '\'') == 0)
+		{
+			dollar_extension(&input->input_string);
+		}
+	}
+}
+
+/*
+** splits the input into the pieces that are embraced by quotes.
+*/
+
+/*char	**parse_embraced_tokens(char *input, char embrace, char no_embraced)
+{
+	char **args;
+	int		start;
+	int		nbr;
+
+	start = -1;
+	nbr = -1;
+	args = (char **)malloc(sizeof(char *) * 1000);
+	while (input[++i])
+	{
+		if (input[i] == embrace &&
+			!check_in_between(input, i, no_embraced))
+		{
+			(start == -1) ? (start = i) : (0);
+		}
+		if (start != -1)
+		{
+			args[++nbr] = ft_strsub(input, start, end - i);
+			start = -1;
+		}
+	}
+	args[++nbr] = NULL;
+	return (args);
+}
+
+void	second_step(t_input input)
+{
+	char	**args;
+	int		i;
+
+	i = -1;
+	//first parse the quotes
+	args = parse_embraced_tokens(input->input_string, '\'', '\"');
+	//then parse double quotes
+	while (args[++i])
+		parse_embraced_tokens(args[i], '\'', '\"');*/
+
 int		unescaped_char(char *input, char c)
 {
 	int	i;
@@ -22,29 +102,27 @@ int		unescaped_char(char *input, char c)
 	return (index);
 }
 
-int		check_in_between(char *input, int index, char unescaped)
+int		check_in_between(char *input, int index, char embrace)
 {
 	int		i;
 	int		start;
 	int		end;
-	char	escaped;
 
 	start = -1;
 	end = -1;
 	i = -1;
-	escaped = (unescaped == '\'') ? ('\"') : ('\'');
 	while (input[++i])
 	{
-		if (input[i] == escaped)
+		if (input[i] == embrace)
 		{
 			start = i++;
-			while (input[i] && input[i] != escaped)
+			while (input[i] && input[i] != embrace)
 				i++;
 		}
-		if (input[i] == escaped)
+		if (input[i] == embrace)
 		{
 			end = i++;
-			while (input[i] && input[i] != escaped)
+			while (input[i] && input[i] != embrace)
 				i++;
 		}
 		if (start < index && index < end)
@@ -74,7 +152,7 @@ void	check_unescaped(char *input)
 		index = unescaped_char(input, unescaped_c);
 		while (line == NULL || unescaped_char(line, unescaped_c) == -1)
 		{
-			if (check_in_between(input, index, unescaped_c))
+			if (check_in_between(input, index,(unescaped_c == '\'') ? ('\"') : ('\'')))
 				break;
 			line != NULL ? input = strjoin_more(3, input, "\n", line) : 0;
 			ft_printf("> ");
@@ -93,7 +171,7 @@ void	check_unescaped(char *input)
 ** or a '~', only the first one gets replaced. !!!
 */
 
-int		nbr_strchr(char *string, char c)
+int		nbr_strchr_unembraced(char *string, char c)
 {
 	int	i;
 	int	nbr_occurances;
@@ -102,60 +180,77 @@ int		nbr_strchr(char *string, char c)
 	nbr_occurances = 0;
 	while (string[++i])
 	{
-		if (string[i] == c)
+		if (string[i] == c &&
+			!check_in_between(string, i, '\'') &&
+			!check_in_between(string, i, '\"'))
 			nbr_occurances++;
 	}
 	return (nbr_occurances);
 }
 
-void	split_seperate_cmds(t_input *input)
+int		find_index_of_next_unembraced_seperator(char *string, char seperator)
+{
+	int	i;
+	int	index;
+
+	i = -1;
+	index = -1;
+	while (string[++i])
+	{
+		index = ft_strchr_index(string, seperator);
+		if (index != -1 &&
+			!check_in_between(string, index, '\'') &&
+			!check_in_between(string, index, '\"'))
+			return (index);
+		else
+		{
+			if (index == -1)
+				return (index);
+		}
+	}
+	return (-1);
+}
+
+void	split_cmds(char **args, char *string, char split)
 {
 	int		i;
 	int		j;
-	int		nbr_cmds;
 	int		length;
+	int		max;
 
 	i = -1;
 	j = -1;
-	nbr_cmds = nbr_strchr(input->input_string, ';') + 1;
-	input->cmds = (char ***)malloc(sizeof(char **) * (nbr_cmds + 1));
-	input->cmds_strings = (char **)malloc(sizeof(char *) * (nbr_cmds + 1));
-	while (input->input_string[++i])
+	max = (string != NULL) ? (ft_strlen(string)) : (0);
+	while (string[++i] && i < max)
 	{
-		j++;
-		while (input->input_string[i] == ' ')
+		while (string[i] == ' ')
 			i++;
-		if ((length = ft_strstr_index(&input->input_string[i], ";")) == -1)
-			length = (int)ft_strlen(&input->input_string[i]);
-		input->cmds_strings[j] = ft_strsub(input->input_string, i, length);
-		input->cmds[j] = ft_strsplit_whitespace(input->cmds_strings[j]);
-		while (input->input_string[i] && input->input_string[i] != ';')
-			i++;
+		if ((length = find_index_of_next_unembraced_seperator(&string[i], split)) == -1)
+		{
+			length = (int)ft_strlen(&string[i]);
+		}
+		args[++j] = ft_strsub(string, i, length);
+		i = i + length;
 	}
-	input->cmds[++j] = NULL;
+	args[++j] = NULL;
 }
 
 void	get_args(t_input *input)
 {
-	int		i;
-	int		j;
-	char	*key;
+	int	i;
+	int	nbr_cmds;
 
 	i = -1;
+	nbr_cmds = nbr_strchr_unembraced(input->input_string, ';') + 1;
+	input->cmds_strings = (char **)malloc(sizeof(char *) * (nbr_cmds + 2));
+	input->cmds = (char ***)malloc(sizeof(char **) * (nbr_cmds + 2));
 	check_unescaped(input->input_string);
-	split_seperate_cmds(input);
-	while (input->cmds && input->cmds[++i])
+	first_step(input);
+	split_cmds(input->cmds_strings, input->input_string, ';');
+	while (input->cmds_strings[++i])
 	{
-		j = -1;
-		while (input->cmds && input->cmds[i][++j])
-		{
-			while (ft_strchr(input->cmds[i][j], '~'))
-			{
-				if ((key = get_key(g_environ, "HOME")) != NULL)
-					replace(&input->cmds[i][j], "~", key);
-			}
-			while (ft_strchr(input->cmds[i][j], '$'))
-				dollar_extension(&input->cmds[i][j]);
-		}
+		nbr_cmds = nbr_strchr_unembraced(input->cmds_strings[i], ' ') + 1;
+		input->cmds[i] = (char **)malloc(sizeof(char *) * (nbr_cmds + 2));
+		split_cmds(input->cmds[i], input->cmds_strings[i], ' ');
 	}
 }
