@@ -21,85 +21,35 @@ void	first_step(t_input *input)
 	int		index;
 
 	i = -1;
-	check_unescaped(input->input_string);
 	while (input->input_string && input->input_string[++i])
 	{
 		while ((index = ft_strchr_index(input->input_string, '~')) != -1
-			&& check_in_between(input->input_string, index, '\'') == 0)
+			&& check_in_between(input->input_string, index, QUOTES) == 0)
 		{
 			if ((key = get_key(g_environ, "HOME")) != NULL)
 				replace(&input->input_string, "~", key);
 		}
 		while ((index = ft_strchr_index(input->input_string, '$')) != -1
-			&& check_in_between(input->input_string, index, '\'') == 0)
+			&& check_in_between(input->input_string, index, QUOTES) == 0)
 		{
 			dollar_extension(&input->input_string);
 		}
 	}
 }
 
-/*
-** splits the input into the pieces that are embraced by quotes.
-*/
-
-/*char	**parse_embraced_tokens(char *input, char embrace, char no_embraced)
-{
-	char **args;
-	int		start;
-	int		nbr;
-
-	start = -1;
-	nbr = -1;
-	args = (char **)malloc(sizeof(char *) * 1000);
-	while (input[++i])
-	{
-		if (input[i] == embrace &&
-			!check_in_between(input, i, no_embraced))
-		{
-			(start == -1) ? (start = i) : (0);
-		}
-		if (start != -1)
-		{
-			args[++nbr] = ft_strsub(input, start, end - i);
-			start = -1;
-		}
-	}
-	args[++nbr] = NULL;
-	return (args);
-}
-
-void	second_step(t_input input)
-{
-	char	**args;
-	int		i;
-
-	i = -1;
-	//first parse the quotes
-	args = parse_embraced_tokens(input->input_string, '\'', '\"');
-	//then parse double quotes
-	while (args[++i])
-		parse_embraced_tokens(args[i], '\'', '\"');*/
-
 int		unescaped_char(char *input, char c)
 {
 	int	i;
-	int	counter;
-	int	index;
 
 	i = -1;
-	counter = 0;
-	index = 0;
 	while (input && input[++i])
 	{
-		if (input[i] == c)
-		{
-			index = i;
-			counter++;
-		}
+		if (input[i] == c &&
+			!check_in_between(input, i, QUOTES) &&
+			!check_in_between(input, i, DOUBLEQUOTES))
+			return (i);
 	}
-	if (counter % 2 == 0)
-		return (-1);
-	return (index);
+	return (-1);
 }
 
 int		check_in_between(char *input, int index, char embrace)
@@ -132,7 +82,7 @@ int		check_in_between(char *input, int index, char embrace)
 	}
 	return (0);
 }
-
+/*
 void	check_unescaped(char *input)
 {
 	int		quotes;
@@ -164,6 +114,41 @@ void	check_unescaped(char *input)
 		(line != NULL) ? (free(line)) : (0);
 	}
 }
+*/
+
+void	check_unescaped(t_input  *input)
+{
+	int		quotes;
+	int		double_quotes;
+	char	*line;
+	char	unescaped_c;
+	int		index;
+
+	line = NULL;
+	quotes = unescaped_char(input->input_string, '\'');
+	double_quotes = unescaped_char(input->input_string, '\"');
+	index = 0;
+	if (quotes != double_quotes)
+	{
+		if (quotes == -1 || double_quotes == -1)
+			unescaped_c = (quotes < double_quotes) ? ('\"') : ('\'');
+		else
+			unescaped_c = (quotes > double_quotes) ? ('\"') : ('\'');
+		index = unescaped_char(input->input_string, unescaped_c);
+		while (line == NULL || unescaped_char(line, unescaped_c) == -1)
+		{
+			ft_printf("> ");
+			get_next_line(0, &line);
+			line != NULL ? input->input_string = strjoin_more(3, input->input_string, "\n", line) : 0;
+			input->input_string = convert_quotes(input->input_string, '\'', '\"', QUOTES);
+			input->input_string = convert_quotes(input->input_string, '\"', QUOTES, DOUBLEQUOTES);
+			if (check_in_between(input->input_string, index,(unescaped_c == QUOTES) ? (QUOTES) : (DOUBLEQUOTES)))
+				break;
+		}
+		(line != NULL) ? (input->input_string = strjoin_more(3, input->input_string, "\n", line)) : (0);
+		(line != NULL) ? (free(line)) : (0);
+	}
+}
 
 /*
 ** the line in the command line (g_input) gets split into an array of single
@@ -183,8 +168,8 @@ int		nbr_strchr_unembraced(char *string, char c)
 	while (string[++i])
 	{
 		if (string[i] == c &&
-			!check_in_between(string, i, '\'') &&
-			!check_in_between(string, i, '\"'))
+			!check_in_between(string, i, QUOTES) &&
+			!check_in_between(string, i, DOUBLEQUOTES))
 			nbr_occurances++;
 	}
 	return (nbr_occurances);
@@ -201,8 +186,8 @@ int		find_index_of_next_unembraced_seperator(char *string, char seperator)
 	{
 		index = ft_strchr_index(string, seperator);
 		if (index != -1 &&
-			!check_in_between(string, index, '\'') &&
-			!check_in_between(string, index, '\"'))
+			!check_in_between(string, index, QUOTES) &&
+			!check_in_between(string, index, DOUBLEQUOTES))
 			return (index);
 		else
 		{
@@ -213,11 +198,11 @@ int		find_index_of_next_unembraced_seperator(char *string, char seperator)
 	return (-1);
 }
 
-void	remove_quotes(t_input *input, char sign)
+void	remove_quotes(t_input *input)
 {
 	int	i;
 	int	j;
-	int	k;
+	int	index;
 
 	i = -1;
 	while (input->cmds[++i])
@@ -225,16 +210,13 @@ void	remove_quotes(t_input *input, char sign)
 		j = -1;
 		while (input->cmds[i][++j])
 		{
-			k = -1;
-			while (input->cmds[i][j][++k])
+			while ((index = ft_strchr_index(input->cmds[i][j], QUOTES))!= -1 ||
+				(index = ft_strchr_index(input->cmds[i][j], DOUBLEQUOTES)) != -1)
 			{
-				if (input->cmds[i][j][k] == sign)
-				{
-					int m = k -1;
-					while (input->cmds[i][j][++m] && input->cmds[i][j][m + 1])
-						input->cmds[i][j][m] = input->cmds[i][j][m + 1];
-					input->cmds[i][j][m] = '\0';
-				}
+				int m = index -1;
+				while (input->cmds[i][j][++m] && input->cmds[i][j][m + 1])
+					input->cmds[i][j][m] = input->cmds[i][j][m + 1];
+				input->cmds[i][j][m] = '\0';
 			}
 		}
 	}
@@ -264,16 +246,52 @@ void	split_cmds(char **args, char *string, char split)
 	args[++j] = NULL;
 }
 
+void	set_to_neg_one(int *one, int *two)
+{
+	*one = -1;
+	*two = -1;
+}
+
+char	*convert_quotes(char *input, char quotes, char other, char conversion_value)
+{
+	int	i;
+	int	start;
+	int	start_o;
+
+	set_to_neg_one(&start, &start_o);
+	i = -1;
+	while (++i < (int)ft_strlen(input))
+	{
+		(input[i] == quotes && start == -1) ? (start = i++) : (0);
+		(input[i] == other && start_o == -1) ? (start_o = i++) : (0);
+		if (input[i] == quotes &&
+			start != -1 && (start_o == -1 ||
+			start_o > start))
+		{
+			input[i] = conversion_value;
+			input[start] = conversion_value;
+			set_to_neg_one(&start, &start_o);
+		}
+		if (input[i] == other && start_o != -1 &&
+			(start == -1 || start_o < start))
+			set_to_neg_one(&start, &start_o);
+		
+	}
+	return (input);
+}
+
 void	get_args(t_input *input)
 {
 	int	i;
 	int	nbr_cmds;
 
 	i = -1;
+	input->input_string = convert_quotes(input->input_string, '\'', '\"', QUOTES);
+	input->input_string = convert_quotes(input->input_string, '\"', QUOTES, DOUBLEQUOTES);
 	nbr_cmds = nbr_strchr_unembraced(input->input_string, ';') + 2;
 	input->cmds_strings = (char **)malloc(sizeof(char *) * nbr_cmds);
 	input->cmds = (char ***)malloc(sizeof(char **) * (nbr_cmds + 100)); //look at this again, something's wrong
-	check_unescaped(input->input_string);
+	check_unescaped(input);
 	first_step(input);
 	split_cmds(input->cmds_strings, input->input_string, ';');
 	while (input->cmds_strings[++i])
@@ -282,6 +300,6 @@ void	get_args(t_input *input)
 		input->cmds[i] = (char **)malloc(sizeof(char *) * nbr_cmds);
 		split_cmds(input->cmds[i], input->cmds_strings[i], ' ');
 	}
-	remove_quotes(input, '\'');
-	remove_quotes(input, '\"');
+	remove_quotes(input);
+	remove_quotes(input);
 }

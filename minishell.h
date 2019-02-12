@@ -37,6 +37,8 @@
 # define GRE  "\x1B[32m"
 # define RESET "\033[0m\033[0m"
 # define IS_EXPANSION(x) (x == '~' || x == '$')
+# define QUOTES -1
+# define DOUBLEQUOTES -2
 
 typedef struct	s_input
 {
@@ -59,12 +61,13 @@ void	change_key(char *variable, char *key);
 char	*get_key(char **dict, char *variable);
 void	dollar_extension(char **args);
 void	get_args(t_input *input);
-void	check_unescaped(char *input);
+void	check_unescaped(t_input *input);
 void	move_elements_in_array(char **array, int index);
 //void	exec_cmd(t_input *input, int j);
 int		exec_cmd(t_input *input, int j);
 int		check_for_pipe(t_input *input, int j);
 void	exec_pipe(t_input *input, int j, char **cmd1, char **cmd2);
 int		check_in_between(char *input, int index, char embrace);
+char	*convert_quotes(char *input, char quotes, char other, char conversion_value);
 
 #endif
