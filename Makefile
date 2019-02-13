@@ -13,11 +13,14 @@
 NAME = minishell
 
 SRC =	./main.c \
-		./keys_environ.c \
-		./ft_builtins.c \
-		./env_setenv_unsetenv.c \
-		./parse_input.c \
-		./pipe.c
+	./openquote.c \
+	./parse_input.c \
+	./expansions.c \
+	./cd.c \
+	./echo.c \
+	./exit.c \
+	./env_setenv_unsetenv.c \
+	./pipe.c
 
 OBJ = $(SRC:.c=.o)
 

@@ -13,19 +13,50 @@
 #include "minishell.h"
 
 /*
+** checks if there are things to replace (if there is a $ or ~ not in between
+** single quotes) and replaces them accordingly.
+*/
+
+void	expansions(t_input *input, int i)
+{
+	int	j;
+	char	*key;
+	int	index;
+
+	j = -1;
+	while (input->cmds[i] && input->cmds[i][++j])
+	{
+		while ((index = ft_strchr_index(input->cmds[i][j], '~')) != -1
+			&& !is_in_between(input->cmds[i][j], index, QUOTES))
+		{
+			if ((key = get_key(g_environ, "HOME")) != NULL)
+				replace(&input->cmds[i][j], "~", key);
+		}
+		while ((index = ft_strchr_index(input->cmds[i][j], '$')) != -1
+			&& !is_in_between(input->cmds[i][j], index, QUOTES))
+		{
+			dollar_expansion(&input->cmds[i][j]);
+		}
+	}
+}
+
+/*
 ** goes through the variable with the '$' extension and replaces it with the
 ** corresponding value, if the variable is set in g_environ. Otherwise the
 ** variable gets replaced with '\0'.
 */
 
-void	dollar_extension(char **args)
+void	dollar_expansion(char **args)
 {
 	size_t	start_var;
-	size_t	end_var;
 	char	*variable;
+	size_t	end_var;
+	size_t	check_quotes;
 
 	start_var = ft_strlen_char(*args, '$');
-	end_var = ft_strlen_char(&(*args)[ft_strlen_char(*args, '$')], '/');
+	end_var = ft_strlen_char(&(*args)[start_var], '/');
+	check_quotes = ft_strlen_char(&(*args)[start_var], QUOTES);
+	end_var = (check_quotes > end_var) ? (end_var) : (check_quotes);
 	variable = ft_strsub(*args, start_var, end_var);
 	replace(args, variable, get_key(g_environ, &variable[1]));
 	free(variable);

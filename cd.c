@@ -20,6 +20,8 @@
 ** updated.
 */
 
+//updating of OLDPWD doesn't work
+
 int	ft_cd(t_input *input, int j)
 {
 	int		index;
@@ -46,49 +48,4 @@ int	ft_cd(t_input *input, int j)
 	change_key("PWD", pwd);
 	free(pwd);
 	return (1);
-}
-
-/*
-** exits the minishell.
-*/
-
-int	ft_exit(t_input *input, int j)
-{
-	input->cmds[j] += 0;
-	free_array(g_environ);
-	return (-1);
-}
-
-/*
-** prints everything that follows to the terminal. If the desired output gets
-** passed as one string (in "") the output keeps the spaces, otherwise each
-** word is seperated by exactly one space.
-*/
-
-int	ft_echo(t_input *input, int j)
-{
-	char	*str;
-	int		last_char;
-	int		i;
-
-	i = 0;
-	last_char = -1;
-	while (input->cmds_strings[j][++last_char])
-		;
-	if ((input->cmds)[j][1] != NULL)
-	{
-		if (input->cmds_strings[j][5] == '"' && input->cmds_strings[j][last_char - 1] == '"')
-		{
-			str = ft_strsub(input->cmds_strings[j], 6, ft_strlen(input->cmds_strings[j]) - 7);
-			ft_printf("%s", str);
-			free(str);
-		}
-		else
-		{
-			while (input->cmds[j][++i])
-				ft_printf("%s ", input->cmds[j][i]);
-		}
-		ft_printf("\n");
-	}
-	return (0);
 }

@@ -51,23 +51,29 @@ char	**g_environ;
 pid_t	g_pid_parent;
 pid_t	g_pid_child;
 
-int		ft_cd(t_input *input, int j);
-int		ft_exit(t_input *input, int j);
-int		ft_setenv(t_input *input, int j);
-int		ft_env(t_input *input, int j);
-int		ft_echo(t_input *input, int j);
-int		ft_unsetenv(t_input *input, int j);
+int	ft_cd(t_input *input, int j);
+int	ft_exit(t_input *input, int j);
+int	ft_setenv(t_input *input, int j);
+int	ft_env(t_input *input, int j);
+int	ft_echo(t_input *input, int j);
+int	ft_unsetenv(t_input *input, int j);
 void	change_key(char *variable, char *key);
 char	*get_key(char **dict, char *variable);
-void	dollar_extension(char **args);
+void	dollar_expansion(char **args);
 void	get_args(t_input *input);
 void	check_unescaped(t_input *input);
 void	move_elements_in_array(char **array, int index);
 //void	exec_cmd(t_input *input, int j);
-int		exec_cmd(t_input *input, int j);
-int		check_for_pipe(t_input *input, int j);
+int	exec_cmd(t_input *input, int j);
+int	check_for_pipe(t_input *input, int j);
 void	exec_pipe(t_input *input, int j, char **cmd1, char **cmd2);
-int		check_in_between(char *input, int index, char embrace);
+int	is_in_between(char *input, int index, char embrace);
 char	*convert_quotes(char *input, char quotes, char other, char conversion_value);
+void	expansions(t_input *input, int i);
+int		nbr_unquoted_char(char *string, char c);
+void	check_for_openquotes(t_input  *input);
+int		openquote_index(char *input, char c);
+int		find_index_of_next_unembraced_seperator(char *string, char seperator);
+
 
 #endif
