@@ -6,7 +6,7 @@
 /*   By: ccodiga <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/12/11 16:05:01 by ccodiga           #+#    #+#             */
-/*   Updated: 2019/01/18 09:59:08 by ccodiga          ###   ########.fr       */
+/*   Updated: 2019/02/13 12:17:29 by ccodiga          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,6 +75,28 @@ char	*check_access(char **cmd, char **array)
 	return (NULL);
 }
 
+
+char	*get_access_string(char **cmd)
+{
+	int		path_key;
+	char	*valid_access;
+	char	**paths;
+
+	path_key = search_str_in_array(g_environ, "PATH");
+	if (path_key == -1 && access(cmd[0], X_OK))
+	{
+		ft_printf("PATH not found\n");
+		return (NULL);
+	}
+	paths = (path_key != -1) ? (ft_strsplit(g_environ[path_key] + 5, ':')) : (NULL);
+	valid_access = (path_key != -1) ? (check_access(cmd, paths)) : (ft_strdup(cmd[0]));
+	if (valid_access == NULL)
+		ft_printf("command not found: %s\n", cmd[0]);
+	(paths != NULL) ? (free_array(paths)) : (0);
+	return (valid_access);
+}
+
+
 /*
 ** getting an array of the different paths in the PATH variable, which then
 ** will get passed to check_acces, to get the right absolut path of the
@@ -85,7 +107,7 @@ char	*check_access(char **cmd, char **array)
 
 int		run_commands(char **cmd)
 {
-	int		path_key;
+	/*int		path_key;
 	char	*valid_access;
 	char	**paths;
 
@@ -99,12 +121,14 @@ int		run_commands(char **cmd)
 	valid_access = (path_key != -1) ? (check_access(cmd, paths)) : (ft_strdup(cmd[0]));
 	if (valid_access == NULL)
 		ft_printf("command not found: %s\n", cmd[0]);
+	*/
+	char *valid_access = get_access_string(cmd);
 	if (valid_access != NULL && (g_pid_child = fork()) == 0)
 		execve(valid_access, cmd, g_environ);
 	else
 		wait(NULL);
 	(valid_access != NULL) ? (free(valid_access)) : (0);
-	(paths != NULL) ? (free_array(paths)) : (0);
+	//(paths != NULL) ? (free_array(paths)) : (0);
 	return (0);
 }
 
@@ -157,8 +181,8 @@ int		minishell(void)
 		j = -1;
 		while (input.cmds[++j])
 		{
-			//if (check_for_pipe(&input, j) == 1)
-			//	continue;
+			if (check_for_pipe(&input, j) == 1)
+				continue;
 			if (exec_cmd(&input, j))
 				run_commands(input.cmds[j]);
 			//free_array(input.cmds[j]); something is wrong here

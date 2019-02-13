@@ -6,7 +6,7 @@
 /*   By: ccodiga <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/01/15 13:36:03 by ccodiga           #+#    #+#             */
-/*   Updated: 2019/01/17 16:47:03 by ccodiga          ###   ########.fr       */
+/*   Updated: 2019/02/13 12:17:26 by ccodiga          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,6 +74,7 @@ int		nbr_unquoted_char(char *string, char c);
 void	check_for_openquotes(t_input  *input);
 int		openquote_index(char *input, char c);
 int		find_index_of_next_unembraced_seperator(char *string, char seperator);
-
+int		run_commands(char **cmd);
+char	*get_access_string(char **cmd);
 
 #endif
