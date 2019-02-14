@@ -1,71 +1,68 @@
 #include "minishell.h"
 
-void	exec_pipe(t_input *input, int j, char **cmd1, char **cmd2)
+int		spawn_proc(int in, int out, char **cmd)
 {
-	int		pipe_fd[2];
-	pid_t	pid1;
-	pid_t	pid2;
-	char	*valid_access;
+	pid_t pid;
 
-	if (pipe(pipe_fd) != 0)
-		ft_printf("failed to create pipe");
-	pid1 =fork();
-	if (pid1 == 0)
+	if ((pid = fork()) == 0)
 	{
-		dup2(pipe_fd[1], 1);
-		close(pipe_fd[1]);
-		input->cmds[j] = cmd1;
-		valid_access = get_access_string(cmd1);
-		execve(valid_access, cmd2, g_environ);
-		free(valid_access);
-		ft_printf("failed to exec first command\n");
+		if (in != 0)
+		{
+			dup2(in, 0);
+			close(in);
+		}
+		if (out != 1)
+		{
+			dup2(out, 1);
+			close(out);
+		}
+		return (execvp(cmd[0], cmd));
 	}
-	pid2 = fork();
-	if (pid2 == 0)
-	{
-		dup2(pipe_fd[0], 0);
-		close(pipe_fd[1]);
-		input->cmds[j] = cmd2;
-		valid_access = get_access_string(cmd2);
-		execve(valid_access, cmd1, g_environ);
-		if (exec_cmd(input, j))
-			execve(valid_access, cmd1, g_environ);
-		free(valid_access);
-		ft_printf("failed to exec second command\n");
-	}
-	close(pipe_fd[0]);
-	close(pipe_fd[1]);
-	wait(NULL);
-	wait(NULL);
+	return (pid);
 }
 
-int	check_for_pipe(t_input *input, int j)
+int		fork_pipes(t_input *input, int j)
 {
 	int		i;
-	int		pipe_index;
-	char	**cmd1;
-	char	**cmd2;
+	int		k;
+	int		in;
+	int		fd[2];
+	int		index;
+	char	**cmd;
 
-	pipe_index = -1;
+	in = 0;
 	i = -1;
-	while (input->cmds[j] && input->cmds[j][++i])
+	while (input->cmds[j][++i])
 	{
-		if (ft_strchr(input->cmds[j][i], '|'))
-		{
-			pipe_index = i;
-			break;
-		}
+		index = 0;
+		while (input->cmds[j][i + index] && ft_strcmp(input->cmds[j][i + index], "|") != 0)
+			index++;
+		cmd = (char **)malloc(sizeof(char *) * index + 1);
+		k = -1;
+		while (input->cmds[j][i] && ft_strcmp(input->cmds[j][i], "|") != 0)
+			cmd[++k] = input->cmds[j][i++];
+		cmd[++k] = NULL;
+		if (input->cmds[j][i] == NULL)
+			break ;
+		pipe(fd);
+		spawn_proc(in, fd[1], cmd);
+		close(fd[1]);
+		in = fd[0];
 	}
-	if (pipe_index == -1)
+	if (in != 0)
+		dup2(in, 0);
+	execvp(cmd[0], cmd);
+	return (1);
+}
+
+int		check_for_pipe(t_input *input, int j)
+{
+	pid_t	pid;
+
+	if (ft_strchr(input->input_string, '|') == 0)
 		return (0);
-	move_elements_in_array(input->cmds[j], pipe_index);
-	i = -1;
-	cmd1 = (char **)malloc(sizeof(char *) * (pipe_index + 2));
-	while (++i < pipe_index)
-		cmd1[i] = input->cmds[j][i];
-	cmd1[i] = NULL;
-	cmd2 = &input->cmds[j][pipe_index];
-	exec_pipe(input, j, cmd1, cmd2);
-	free(cmd1);
+	if ((pid = fork()) == 0)
+		fork_pipes(input, j);
+	wait(NULL);
 	return (1);
 }
