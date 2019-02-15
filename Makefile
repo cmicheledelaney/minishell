@@ -6,21 +6,22 @@
 #    By: ccodiga <marvin@42.fr>                     +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2018/11/15 16:17:22 by ccodiga           #+#    #+#              #
-#    Updated: 2019/01/15 14:12:19 by ccodiga          ###   ########.fr        #
+#    Updated: 2019/02/14 15:28:35 by ccodiga          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 NAME = minishell
 
 SRC =	./main.c \
-	./openquote.c \
-	./parse_input.c \
-	./expansions.c \
-	./cd.c \
-	./echo.c \
-	./exit.c \
-	./env_setenv_unsetenv.c \
-	./pipe.c
+		./openquote.c \
+		./parse_input.c \
+		./expansions.c \
+		./cd.c \
+		./echo.c \
+		./exit.c \
+		./env_setenv_unsetenv.c \
+		./pipe.c \
+		./redirection.c
 
 OBJ = $(SRC:.c=.o)
 

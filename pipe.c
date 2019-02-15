@@ -32,20 +32,31 @@ int		fork_pipes(t_input *input, int j)
 
 	in = 0;
 	i = -1;
+	index = 0;
+
 	while (input->cmds[j][++i])
 	{
 		index = 0;
-		while (input->cmds[j][i + index] && ft_strcmp(input->cmds[j][i + index], "|") != 0)
+		while (input->cmds[j][i + index] &&
+			IS_OPERATOR(input->cmds[j][i + index][0]))
 			index++;
 		cmd = (char **)malloc(sizeof(char *) * index + 1);
 		k = -1;
-		while (input->cmds[j][i] && ft_strcmp(input->cmds[j][i], "|") != 0)
+		while (input->cmds[j][i] &&
+			IS_OPERATOR(input->cmds[j][i + index][0]))
 			cmd[++k] = input->cmds[j][i++];
 		cmd[++k] = NULL;
 		if (input->cmds[j][i] == NULL)
 			break ;
-		pipe(fd);
-		spawn_proc(in, fd[1], cmd);
+		if (input->cmds[j][index][0] == '|')
+		{
+			pipe(fd);
+			spawn_proc(in, fd[1], cmd);
+		}
+		else
+		{
+			redirect(input, j, cmd);
+		}
 		close(fd[1]);
 		in = fd[0];
 	}
@@ -59,7 +70,7 @@ int		check_for_pipe(t_input *input, int j)
 {
 	pid_t	pid;
 
-	if (ft_strchr(input->input_string, '|') == 0)
+	if (ft_strchr(input->input_string, '|') == NULL && ft_strchr(input->input_string, '>') == NULL)
 		return (0);
 	if ((pid = fork()) == 0)
 		fork_pipes(input, j);

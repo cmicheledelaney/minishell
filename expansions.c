@@ -6,7 +6,7 @@
 /*   By: ccodiga <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/01/15 13:49:15 by ccodiga           #+#    #+#             */
-/*   Updated: 2019/01/17 17:03:43 by ccodiga          ###   ########.fr       */
+/*   Updated: 2019/02/14 14:20:22 by ccodiga          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -102,7 +102,7 @@ void	change_key(char *variable, char *key)
 	char	**new_env;
 
 	i = -1;
-	if (variable == NULL || key== NULL)
+	if (variable == NULL || key == NULL)
 		return ;
 	if ((unset_var = search_str_in_array(g_environ, variable)) == -1)
 	{
@@ -111,8 +111,8 @@ void	change_key(char *variable, char *key)
 		unset_var = i;
 	}
 	new_env = copy_array(g_environ);
-	free_array(g_environ);
+	(new_env[unset_var] != NULL) ? (free(new_env[unset_var])) : (0);
+	new_env[unset_var] = strjoin_more(3, variable, "=", key);
+	free(g_environ);
 	g_environ = new_env;
-	(g_environ[unset_var] != NULL) ? (free(g_environ[unset_var])) : (0);
-	g_environ[unset_var] = strjoin_more(3, variable, "=", key);
 }

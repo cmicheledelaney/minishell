@@ -6,7 +6,7 @@
 /*   By: ccodiga <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/12/11 16:05:01 by ccodiga           #+#    #+#             */
-/*   Updated: 2019/02/13 12:17:29 by ccodiga          ###   ########.fr       */
+/*   Updated: 2019/02/14 18:43:21 by ccodiga          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,31 +52,38 @@ int		(*g_builtin_functions[])(t_input *, int) =
 char	*check_access(char **cmd, char **array)
 {
 	int		i;
-	char	*access_str;
+	char	*absolut_path;
 	char	*hold;
 
 	i = -1;
 	while (array[++i])
 	{
 		if (i == 0)
-			access_str = ft_strdup(cmd[0]);
+			absolut_path = ft_strdup(cmd[0]);
 		else
 		{
-			access_str = ft_strjoin(array[i], "/");
-			hold = access_str;
-			access_str = ft_strjoin(access_str, cmd[0]);
+			absolut_path = ft_strjoin(array[i], "/");
+			hold = absolut_path;
+			absolut_path = ft_strjoin(absolut_path, cmd[0]);
 			free(hold);
 		}
-		if (access(access_str, X_OK) == 0)
-			return (access_str);
+		if (access(absolut_path, X_OK) == 0)
+			return (absolut_path);
 		else
-			free(access_str);
+			free(absolut_path);
 	}
 	return (NULL);
 }
 
+/*
+** getting an array of the different paths in the PATH variable, which then
+** will get passed to check_acces, to get the right absolut path of the
+** executable. The returned string contains the path joined with the name
+** of the executable, shich then will be passed into the execve function.
+** The execve function executes the command as a child process.
+*/
 
-char	*get_access_string(char **cmd)
+char	*get_absolut_path(char **cmd)
 {
 	int		path_key;
 	char	*valid_access;
@@ -96,33 +103,11 @@ char	*get_access_string(char **cmd)
 	return (valid_access);
 }
 
-
-/*
-** getting an array of the different paths in the PATH variable, which then
-** will get passed to check_acces, to get the right absolut path of the
-** executable. The returned string contains the path joined with the name
-** of the executable, shich then will be passed into the execve function.
-** The execve function executes the command as a child process.
-*/
-
-int		run_commands(char **cmd)
+int		fork_execve(char **cmd)
 {
-	/*int		path_key;
-	char	*valid_access;
-	char	**paths;
+	char *valid_access;
 
-	path_key = search_str_in_array(g_environ, "PATH");
-	if (path_key == -1 && access(cmd[0], X_OK))
-	{
-		ft_printf("PATH not found\n");
-		return (-1);
-	}
-	paths = (path_key != -1) ? (ft_strsplit(g_environ[path_key] + 5, ':')) : (NULL);
-	valid_access = (path_key != -1) ? (check_access(cmd, paths)) : (ft_strdup(cmd[0]));
-	if (valid_access == NULL)
-		ft_printf("command not found: %s\n", cmd[0]);
-	*/
-	char *valid_access = get_access_string(cmd);
+	valid_access = get_absolut_path(cmd);
 	if (valid_access != NULL && (g_pid_child = fork()) == 0)
 		execve(valid_access, cmd, g_environ);
 	else
@@ -133,9 +118,8 @@ int		run_commands(char **cmd)
 }
 
 /*
-** reads the input given on the command line line by line and processes it.
-** First the function pointer array will be searched for the command, if it's
-** not found there, the command gets executed by run_commands.
+** prints the prompt which consists of the string "minishell" and the value of
+** the USER key in g_environ. if there is no USER a '-' gets printed.
 */
 
 int		print_prompt(void)
@@ -148,7 +132,11 @@ int		print_prompt(void)
 	return (1);
 }
 
-int		exec_cmd(t_input *input, int j)
+/*
+** checks if the command is one of the builtin functions and executes it.
+*/
+
+int		exec_builtin(t_input *input, int j)
 {
 	int	done;
 	int	i;
@@ -169,32 +157,6 @@ int		exec_cmd(t_input *input, int j)
 	return (0);
 }
 
-
-int		minishell(void)
-{
-	t_input	input;
-	int		j;
-
-	while (print_prompt() && get_next_line(0, &input.input_string) > 0)
-	{
-		get_args(&input);
-		j = -1;
-		while (input.cmds[++j])
-		{
-			if (check_for_pipe(&input, j) == 1)
-				continue;
-			if (exec_cmd(&input, j))
-				run_commands(input.cmds[j]);
-			//free_array(input.cmds[j]); something is wrong here
-			free(input.cmds_strings[j]);
-		}
-		(input.input_string != NULL) ? (free(input.input_string)) : (0);
-		input.input_string = NULL;
-		return (1);
-	}
-	return (0);
-}
-
 /*
 ** catches the signal SIGINT (ctrl + c) and exits the child process. If SIGINT
 ** is sent by the parent process it just returns to where the process got
@@ -211,6 +173,37 @@ void	signal_handler(int signum)
 }
 
 /*
+** reads the input given on the command line line by line and processes it.
+** First the function pointer array will be searched for the command, if it's
+** not found there, the command gets executed by fork_execve.
+*/
+
+int		minishell(void)
+{
+	t_input	input;
+	int		j;
+
+	while (print_prompt() && get_next_line(0, &input.input_string) > 0)
+	{
+		get_args(&input);
+		j = -1;
+		while (input.cmds[++j])
+		{
+			if (check_for_pipe(&input, j) == 1)
+				continue;
+			if (exec_builtin(&input, j))
+				fork_execve(input.cmds[j]);
+			//free_array(input.cmds[j]); something is wrong here
+			free(input.cmds_strings[j]);
+		}
+		(input.input_string != NULL) ? (free(input.input_string)) : (0);
+		input.input_string = NULL;
+		return (1);
+	}
+	return (0);
+}
+
+/*
 ** initializes the signal for SIGINT and starts the nearly infinite loop of the
 ** minishell while printing the prompt with the value of USER. The global for
 ** the parent process gets set and the global for the child process gets reset
@@ -222,12 +215,17 @@ void	signal_handler(int signum)
 
 int		main(int argc, char **argv, char **environ)
 {
+	char *clear[2];
+
+	clear[0] = ft_strdup("clear");
+	clear[1] = NULL;
 	g_pid_parent = getpid();
-	argv[argc] = NULL;
 	signal(SIGINT, signal_handler);
+	argv[argc] = NULL;
 	g_environ = copy_array(environ);
+	fork_execve(clear);
 	while (minishell())
 		g_pid_child = 0;
 	ft_printf("\n");
 	return (0);
-	}
+}

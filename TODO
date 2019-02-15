@@ -1,0 +1,4 @@
+add an element in struct that represents the command, like: input->command[j]   the "ls" of "ls -l -a"
+and also one that represents the options: input->options[j][] the "-l" "-a"
+
+add an array of operators: input->operators[j][]
