@@ -32,33 +32,31 @@ int		fork_pipes(t_input *input, int j)
 
 	in = 0;
 	i = -1;
-	index = 0;
-
-	while (input->cmds[j][++i])
+	while (input->cmds[j][i] && input->cmds[j][++i])
 	{
 		index = 0;
 		while (input->cmds[j][i + index] &&
-			IS_OPERATOR(input->cmds[j][i + index][0]))
+			!IS_OPERATOR(input->cmds[j][i + index][0]))
 			index++;
 		cmd = (char **)malloc(sizeof(char *) * index + 1);
 		k = -1;
 		while (input->cmds[j][i] &&
-			IS_OPERATOR(input->cmds[j][i + index][0]))
+			!IS_OPERATOR(input->cmds[j][i][0]))
 			cmd[++k] = input->cmds[j][i++];
 		cmd[++k] = NULL;
 		if (input->cmds[j][i] == NULL)
-			break ;
+			break;
 		if (input->cmds[j][index][0] == '|')
 		{
 			pipe(fd);
 			spawn_proc(in, fd[1], cmd);
+			close(fd[1]);
+			in = fd[0];
 		}
-		else
+		if (input->cmds[j][index][0] != '|')
 		{
-			redirect(input, j, cmd);
+			redirect(input, j, cmd, i, in, fd[1]);
 		}
-		close(fd[1]);
-		in = fd[0];
 	}
 	if (in != 0)
 		dup2(in, 0);
@@ -70,7 +68,9 @@ int		check_for_pipe(t_input *input, int j)
 {
 	pid_t	pid;
 
-	if (ft_strchr(input->input_string, '|') == NULL && ft_strchr(input->input_string, '>') == NULL)
+	if (ft_strchr(input->input_string, '|') == NULL &&
+		ft_strchr(input->input_string, '>') == NULL &&
+		ft_strchr(input->input_string, '<') == NULL)
 		return (0);
 	if ((pid = fork()) == 0)
 		fork_pipes(input, j);

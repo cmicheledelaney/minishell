@@ -76,6 +76,6 @@ int		openquote_index(char *input, char c);
 int		find_index_of_next_unembraced_seperator(char *string, char seperator);
 int		fork_execve(char **cmd);
 char	*get_access_string(char **cmd);
-int		redirect(t_input *input, int j, char **cmd);
+int		redirect(t_input *input, int j, char **cmd, int i, int in, int out);
 
 #endif
