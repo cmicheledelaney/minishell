@@ -215,15 +215,10 @@ int		minishell(void)
 
 int		main(int argc, char **argv, char **environ)
 {
-	char *clear[2];
-
-	clear[0] = ft_strdup("clear");
-	clear[1] = NULL;
 	g_pid_parent = getpid();
 	signal(SIGINT, signal_handler);
 	argv[argc] = NULL;
 	g_environ = copy_array(environ);
-	fork_execve(clear);
 	while (minishell())
 		g_pid_child = 0;
 	ft_printf("\n");
