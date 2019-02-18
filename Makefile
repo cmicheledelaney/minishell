@@ -27,10 +27,14 @@ OBJ = $(SRC:.c=.o)
 
 FLAGS = -Wall -Wextra -Werror
 
+MINISHELL_SRCS = $(addprefix srcs/,$(SRC))
+
 LIB = ./libft/libft.a
 
+INC= -I./includes
+
 $(NAME): $(LIB)
-	@gcc $(FLAGS) $(SRC) $(LIB) -o $(NAME);
+	@gcc $(FLAGS) $(INC) $(MINISHELL_SRCS) $(LIB) -o $(NAME);
 	@echo compiling minishell
 
 all: $(NAME)
@@ -44,7 +48,7 @@ clean:
 
 fclean: clean
 	@rm -rf $(NAME) libft/libft.a
-	@rm -rf libft/*.o
+	@make fclean -C libft
 	@echo deleting libft.a and minishell
 
 re: fclean all

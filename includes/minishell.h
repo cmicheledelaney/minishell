@@ -26,7 +26,7 @@
 # include <time.h>
 # include <grp.h>
 # include <stdio.h>
-# include "libft/includes/libft.h"
+# include "libft.h"
 # define RED "\033[31m"
 # define BLU "\033[34m"
 # define MAG "\033[1m\033[35m"
