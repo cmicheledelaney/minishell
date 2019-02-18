@@ -1,4 +1,7 @@
 # minishell 
+
+[![asciicast](https://asciinema.org/a/zNuncJUbNNAWSPCFSMNVaFCPi.svg)](https://asciinema.org/a/zNuncJUbNNAWSPCFSMNVaFCPi)
+
 ## About
 Minishell is a 42 school project of the Unix branch. The requirements were simple: build your own shell. The restrictions were similar to all our school projects:
  - only a few functions from the standard library can be used (-> hence my own version of the standard library (libft))
