@@ -56,8 +56,8 @@ int		is_in_between(char *input, int index, char embrace)
 }
 
 /*
-** reads through the string and checks for unclosed quotes/double quotes. if
-** there are any, it keeps reading until the quote/double quote gets closed.
+** reads through the string and checks for unclosed quotes. if
+** there are any, it keeps reading until the quote gets closed.
 */
 
 void	check_for_openquotes(t_input  *input)
@@ -89,15 +89,13 @@ void	check_for_openquotes(t_input  *input)
 			if (is_in_between(input->input_string, index,(unescaped_c == QUOTES) ? (QUOTES) : (DOUBLEQUOTES)))
 				break;
 		}
-		(line != NULL) ? (input->input_string = strjoin_more(3, input->input_string, "\n", line)) : (0);
 		(line != NULL) ? (free(line)) : (0);
 	}
 }
 
 /*
 ** iterates through the string and counts how often the character c appears in
-** it. it only counts the characters that are not closed in between quotes or double
-** quotes.
+** it. it only counts the characters that are not closed in between quotes.
 */
 
 int		nbr_unquoted_char(char *string, char c)
@@ -119,7 +117,7 @@ int		nbr_unquoted_char(char *string, char c)
 
 /*
 ** iterates through the given string and looks for the character seperator. it
-** returns the index of it if it is not enclosed by quotes or double quotes.
+** returns the index of it if it is not enclosed by quotes.
 */
 
 int		find_index_of_next_unembraced_seperator(char *string, char seperator)

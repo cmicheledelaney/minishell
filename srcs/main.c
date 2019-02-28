@@ -189,11 +189,12 @@ int		minishell(void)
 		j = -1;
 		while (input.cmds[++j])
 		{
-			if (check_for_pipe(&input, j) == 1)
-				continue;
+			//this part is not completely working yet
+			//if (check_for_pipe(&input, j) == 1)
+			//	continue;
 			if (exec_builtin(&input, j))
 				fork_execve(input.cmds[j]);
-			//free_array(input.cmds[j]); something is wrong here
+			free_array(input.cmds[j]);
 			free(input.cmds_strings[j]);
 		}
 		(input.input_string != NULL) ? (free(input.input_string)) : (0);

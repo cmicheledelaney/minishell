@@ -16,11 +16,12 @@ int		spawn_proc(int in, int out, char **cmd)
 			dup2(out, 1);
 			close(out);
 		}
-		return (execvp(cmd[0], cmd));
+		return (execvp(cmd[0], cmd)); //needs to get replaced with execv function
 	}
 	return (pid);
 }
 
+//algorithm is not completely working yet, redirections combined with pipes don't work
 int		fork_pipes(t_input *input, int j)
 {
 	int		i;
@@ -55,14 +56,19 @@ int		fork_pipes(t_input *input, int j)
 		}
 		if (input->cmds[j][index][0] != '|')
 		{
-			redirect(input, j, cmd, i, in, fd[1]);
+			redirect(input, j, cmd, i, in, fd[1])
 		}
 	}
 	if (in != 0)
 		dup2(in, 0);
-	execvp(cmd[0], cmd);
+	execvp(cmd[0], cmd); //needs to get replaced with execve function
 	return (1);
 }
+
+/*
+** checks if there are any pipes or redirections in the command. if so,
+** it gets directed to fork_pipes.
+*/
 
 int		check_for_pipe(t_input *input, int j)
 {
